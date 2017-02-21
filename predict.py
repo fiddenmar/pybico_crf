@@ -11,6 +11,6 @@ def predict(sentance):
 	return crf.predict(target)
 
 if __name__ == "__main__":
-	inp = input("Input string:")
+	inp = input("Input string: ")
 	pred = predict(inp)
 	print(list(zip(inp.split(), *pred)))
