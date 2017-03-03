@@ -3,7 +3,7 @@ import getch
 filepubs = open("pubs", "r")
 filetokens = open("tokens", "a+")
 pubs = filepubs.readlines()
-d = {"0": "T_DELIMETER", "1": "T_AUTHOR", "2": "T_TITLE", "3": "T_JOURNAL", "4": "T_LOCATION", "5": "T_PUBLISHER", "6": "T_YEAR", "7": "T_VOLUME", "8": "T_PAGES", "9": "T_GARBAGE"}
+d = {"0": "T_DELIMITER", "1": "T_AUTHOR", "2": "T_TITLE", "3": "T_JOURNAL", "4": "T_LOCATION", "5": "T_PUBLISHER", "6": "T_YEAR", "7": "T_VOLUME", "8": "T_PAGES", "9": "T_TJSEP"}
 for pub in pubs:
 	tokens = pub.split()
 	labels = [None] * len(tokens)
@@ -22,7 +22,7 @@ for pub in pubs:
 				7 - volume
 				8 - pages
 				9 - title-journal separator
-				0 - delimeter""")
+				0 - delimiter""")
 			try:
 				res = getch.getch()
 				labels[i] = d[res]

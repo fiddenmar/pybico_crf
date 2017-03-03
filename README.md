@@ -16,7 +16,7 @@ $ ipython3 learn.py
              precision    recall  f1-score   support  
   
    T_AUTHOR      1.000     1.000     1.000        68  
-T_DELIMETER      0.939     1.000     0.969        31  
+T_DELIMITER      0.939     1.000     0.969        31  
   T_JOURNAL      0.948     0.970     0.959       132  
  T_LOCATION      1.000     0.857     0.923         7  
     T_PAGES      0.893     1.000     0.943        25  
@@ -30,4 +30,4 @@ avg / total      0.968     0.968     0.967       465
 
   $ ipython3 predict.py  
 Input string: Author A.A. Title title title title. Awesome journal, 2016. - №2. - 13.  
-[('Author', 'T_AUTHOR'), ('A.A.', 'T_AUTHOR'), ('Title', 'T_TITLE'), ('title', 'T_TITLE'), ('title', 'T_TITLE'), ('title.', 'T_TITLE'), ('Awesome', 'T_JOURNAL'), ('journal,', 'T_JOURNAL'), ('2016.', 'T_YEAR'), ('-', 'T_DELIMETER'), ('№2.', 'T_VOLUME'), ('-', 'T_DELIMETER'), ('13.', 'T_PAGES')]  
+[('Author', 'T_AUTHOR'), ('A.A.', 'T_AUTHOR'), ('Title', 'T_TITLE'), ('title', 'T_TITLE'), ('title', 'T_TITLE'), ('title.', 'T_TITLE'), ('Awesome', 'T_JOURNAL'), ('journal,', 'T_JOURNAL'), ('2016.', 'T_YEAR'), ('-', 'T_DELIMITER'), ('№2.', 'T_VOLUME'), ('-', 'T_DELIMITER'), ('13.', 'T_PAGES')]  
