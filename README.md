@@ -4,7 +4,7 @@ Requirements:
 python3  
 python3-pip  
 scikit-learn (pip3 install scikit-learn)  
-sklearn-crfsuite (pip3 install sklearn-crfsuite)  
+sklearn-crfsuite (pip3 install sklearn_crfsuite)
   
 Usage:  
 python3 learn.py  
