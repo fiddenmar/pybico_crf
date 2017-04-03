@@ -75,7 +75,7 @@ def doc2text(filename):
         for t in paragraphs_tables(document):
             if type(t) is Table:
                 for r in t.rows:
-                    text.append(';'.join([' '.join(cell.text.split()) for cell in r.cells]))
+                    text.append('; '.join([' '.join(cell.text.split()) for cell in r.cells]))
             else:
                 text.append(t.text)
         return '\n'.join(text)
