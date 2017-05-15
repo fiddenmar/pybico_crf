@@ -3,12 +3,16 @@ PYthon BIbliography COnverter, based on Conditional Random Fields
 Requirements:  
 python3  
 python3-pip  
+mysql
+antiword
 scikit-learn (pip3 install scikit-learn)  
 sklearn-crfsuite (pip3 install sklearn_crfsuite)
+pymyql (pip3 install pymysql)
+docx (pip3 install docx)
   
 Usage:  
 python3 learn.py  
-python3 predict.py  
+python3 pybico_crf.py
 <Input>  
   
 Example:  
@@ -28,6 +32,15 @@ T_PUBLISHER      1.000     0.800     0.889        10
   
 avg / total      0.968     0.968     0.967       465  
 
-  $ ipython3 predict.py  
-Input string: Author A.A. Title title title title. Awesome journal, 2016. - №2. - 13.  
-[('Author', 'T_AUTHOR'), ('A.A.', 'T_AUTHOR'), ('Title', 'T_TITLE'), ('title', 'T_TITLE'), ('title', 'T_TITLE'), ('title.', 'T_TITLE'), ('Awesome', 'T_JOURNAL'), ('journal,', 'T_JOURNAL'), ('2016.', 'T_YEAR'), ('-', 'T_DELIMITER'), ('№2.', 'T_VOLUME'), ('-', 'T_DELIMITER'), ('13.', 'T_PAGES')]  
+Interactive input:
+$ ipython3 pybico_crf.py
+Enter the bibliography string
+Author A.A. Title title title title. Awesome journal, 2016. - №2. - 13.
+{'T_PAGES': '13.', 'T_AUTHOR': 'Author A.A.', 'T_TITLE': 'Title title title title.', 'T_JOURNAL': 'Awesome journal,', 'T_VOLUME': '№2.', 'T_YEAR': '2016.'}
+
+Input using command line argument:
+$ ipython3 pybico_crf.py -b "Author A.A. Title title title title. Awesome journal, 2016. - №2. - 13."
+{'T_TITLE': 'Title title title title.', 'T_YEAR': '2016.', 'T_PAGES': '13.', 'T_AUTHOR': 'Author A.A.', 'T_JOURNAL': 'Awesome journal,', 'T_VOLUME': '№2.'}
+
+Load result to database:
+$ ipython3 pybico_crf.py -b "Author A.A. Title title title title. Awesome journal, 2016. - №2. - 13." -l -u root -p 123456
