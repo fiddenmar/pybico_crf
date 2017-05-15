@@ -88,7 +88,6 @@ if __name__ == '__main__':
 		results.append(result)
 	if load:
 		publications = [ compose_publication(result) for result in results ]
-		print(publications)
 		db = DBWrapper(user, password)
 		db.add(publications)
 	else:
