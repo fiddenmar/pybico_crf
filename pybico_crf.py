@@ -21,7 +21,8 @@ def group_publication(zipped_list):
 	it = itertools.groupby(zipped_list, operator.itemgetter(0))
 	for key, subiter in it:
 		if key not in ["T_TJSEP", "T_DELIMITER"]:
-			accumulator.append((key, " ".join([item[1] for item in subiter]))) 
+			accumulator.append((key, " ".join([item[1] for item in subiter])))
+	accumulator.reverse()
 	return dict((k, v) for k, v in accumulator)
 
 def compose_publication(zipped_publication):
@@ -39,8 +40,8 @@ def predict(sentence_array):
 	results=[]
 
 	for sentence in sentence_array:
-		result=predict_one(sentence)
-		results.append(result)
+		result = predict_one(sentence)
+		results.append(*result)
 	return results
 
 if __name__ == '__main__':
@@ -48,34 +49,48 @@ if __name__ == '__main__':
 	user = ''
 	password = ''
 	load = False
+	input_list = []
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], 'hb:u:p:l')
+		opts, args = getopt.getopt(sys.argv[1:], 'hb:u:p:lf:')
 	except getopt.GetoptError:
-		print('usage: python3 pybico_crf.py [-s <inputString>]')
+		print('usage: python3 pybico_crf.py [-s <inputString>][-f <fileName>]')
 		sys.exit(2)
 	if len(opts) == 0:
 		print('Enter the bibliography string')
 		input_string = input()
+		input_list = [ input_string ]
 	else:
 		for opt, arg in opts:
 			if opt == '-h':
-				print('usage: python3 pybico_crf.py [-s <inputString>]')
+				print('usage: python3 pybico_crf.py [-s <inputString>][-f <fileName>]')
 				sys.exit()
 			elif opt == '-b':
 				input_string = arg
+				input_list = [ input_string ]
 			elif opt == '-u':
 				user = arg
 			elif opt == '-p':
 				password = arg
 			elif opt == '-l':
 				load = True
+			elif opt == '-f':
+				f = open(arg)
+				content = f.read()
+				lines = content.split('\n')
+				input_list = [ line.strip() for line in lines ]
 			else:
-				print('usage: python3 pybico_crf.py [-s <inputString>]')
-	pred = predict_one(input_string)
-	result = list(zip(*pred, input_string.split()))
+				print('usage: python3 pybico_crf.py [-s <inputString>][-f <fileName>]')
+				sys.exit(2)
+	pred = predict(input_list)
+	results = []
+	for predict, input_string in zip(pred, input_list):
+		result = list(zip(predict, input_string.split()))
+		results.append(result)
 	if load:
-		publication = compose_publication(result)
+		publications = [ compose_publication(result) for result in results ]
+		print(publications)
 		db = DBWrapper(user, password)
-		db.add([publication])
+		db.add(publications)
 	else:
-		print(group_publication(result))
+		for result in results:
+			print(group_publication(result))
