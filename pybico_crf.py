@@ -48,48 +48,69 @@ if __name__ == '__main__':
 	input_string = ''
 	user = ''
 	password = ''
-	load = False
 	input_list = []
+	usage_string = 'usage: python3 pybico_crf.py  [-h][-i <input_mode> -s <input_source>][-l -u <user_name> -p <user_password>]'
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], 'hb:u:p:lf:')
+		opts, args = getopt.getopt(sys.argv[1:], 'hi:u:p:ls:')
 	except getopt.GetoptError:
-		print('usage: python3 pybico_crf.py [-s <inputString>][-f <fileName>]')
+		print(usage_string)
 		sys.exit(2)
-	if len(opts) == 0:
-		print('Enter the bibliography string')
+	i_flag = 'input'
+	u_flag = False
+	p_flag = False
+	l_flag = False
+	s_flag = False
+	for opt, arg in opts:
+		if opt == '-h':
+			print(usage_string)
+			sys.exit()
+		elif opt == '-i':
+			i_flag = arg
+		elif opt == '-u':
+			user = arg
+			u_flag = True
+		elif opt == '-p':
+			password = arg
+			p_flag = True
+		elif opt == '-l':
+			l_flag = True
+		elif opt == '-s':
+			input_string = arg
+			s_flag = True
+		else:
+			print(usage_string)
+			sys.exit(2)
+	if i_flag == 'input':
 		input_string = input()
-		input_list = [ input_string ]
+		input_list = [input_string]
+	elif i_flag == 'text':
+		if s_flag:
+			f = open(input_string)
+			content = f.read()
+			lines = content.split('\n')
+			input_list = [line.strip() for line in lines]
+		else:
+			print('The source (-s) option should be specified for proper input (-i)')
+			print(usage_string)
+			sys.exit(2)
+	elif i_flag == 'string':
+		input_list = [input_string]
 	else:
-		for opt, arg in opts:
-			if opt == '-h':
-				print('usage: python3 pybico_crf.py [-s <inputString>][-f <fileName>]')
-				sys.exit()
-			elif opt == '-b':
-				input_string = arg
-				input_list = [ input_string ]
-			elif opt == '-u':
-				user = arg
-			elif opt == '-p':
-				password = arg
-			elif opt == '-l':
-				load = True
-			elif opt == '-f':
-				f = open(arg)
-				content = f.read()
-				lines = content.split('\n')
-				input_list = [ line.strip() for line in lines ]
-			else:
-				print('usage: python3 pybico_crf.py [-s <inputString>][-f <fileName>]')
-				sys.exit(2)
+		print('Possible input (-i) option values: input, text, string')
+		print(usage_string)
+		sys.exit(2)
 	pred = predict(input_list)
 	results = []
 	for predict, input_string in zip(pred, input_list):
 		result = list(zip(predict, input_string.split()))
 		results.append(result)
-	if load:
-		publications = [ compose_publication(result) for result in results ]
-		db = DBWrapper(user, password)
-		db.add(publications)
+	if l_flag:
+		if u_flag and p_flag:
+			publications = [ compose_publication(result) for result in results ]
+			db = DBWrapper(user, password)
+			db.add(publications)
+		else:
+			print('The user (-u) and the password (-p) options should be specified for proper loading (-l)')
 	else:
 		for result in results:
 			print(group_publication(result))
