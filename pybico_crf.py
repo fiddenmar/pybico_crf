@@ -12,6 +12,7 @@ from author import Author
 from misc import Misc
 from dbwrapper import DBWrapper
 
+from doc2text import doc2text
 from features import word2features, sent2features, sent2labels, sent2tokens
 
 crf = joblib.load('model.pkl')
@@ -32,6 +33,12 @@ def compose_publication(zipped_publication):
 	misc = Misc(grouped_publication.get("T_LOCATION"), grouped_publication.get("T_PUBLISHER"), grouped_publication.get("T_YEAR"), grouped_publication.get("T_VOLUME"), grouped_publication.get("T_PAGES"))
 	return Publication(grouped_publication.get("T_TITLE"), authors, source, misc)
 
+def validate(predict):
+	must_be_elements = ["T_AUTHOR", "T_TITLE", "T_JOURNAL"]
+	if set(must_be_elements).issubset(predict):
+		return True
+	return False
+
 def predict_one(sentence):
 	target = [sent2features(s) for s in [sentence.split()]]
 	return crf.predict(target)
@@ -49,41 +56,38 @@ if __name__ == '__main__':
 	user = ''
 	password = ''
 	input_list = []
+	input_mode = 'input'
+	load_process = False
 	usage_string = 'usage: python3 pybico_crf.py  [-h][-i <input_mode> -s <input_source>][-l -u <user_name> -p <user_password>]'
 	try:
 		opts, args = getopt.getopt(sys.argv[1:], 'hi:u:p:ls:')
 	except getopt.GetoptError:
 		print(usage_string)
 		sys.exit(2)
-	i_flag = 'input'
-	u_flag = False
-	p_flag = False
-	l_flag = False
-	s_flag = False
+
 	for opt, arg in opts:
 		if opt == '-h':
 			print(usage_string)
 			sys.exit()
 		elif opt == '-i':
-			i_flag = arg
+			input_mode = arg
 		elif opt == '-u':
 			user = arg
-			u_flag = True
 		elif opt == '-p':
 			password = arg
-			p_flag = True
 		elif opt == '-l':
-			l_flag = True
+			load_process = True
 		elif opt == '-s':
 			input_string = arg
-			s_flag = True
 		else:
 			print(usage_string)
 			sys.exit(2)
-	if i_flag == 'input':
+
+	if input_mode == 'input':
+		print('Enter the bibliography string:')
 		input_string = input()
 		input_list = [input_string]
-	elif i_flag == 'text':
+	elif input_mode == 'text':
 		if s_flag:
 			f = open(input_string)
 			content = f.read()
@@ -93,24 +97,35 @@ if __name__ == '__main__':
 			print('The source (-s) option should be specified for proper input (-i)')
 			print(usage_string)
 			sys.exit(2)
-	elif i_flag == 'string':
+	elif input_mode == 'string':
 		input_list = [input_string]
+	elif input_mode == 'doc':
+		input_list = doc2text(input_string).split('\n')
+		input_list = [ inp.lstrip('0123456789.- ') for inp in input_list ]
 	else:
-		print('Possible input (-i) option values: input, text, string')
+		print('Possible input (-i) option values: input, text, string, doc')
 		print(usage_string)
 		sys.exit(2)
+
+	if load_process:
+		if user != '' and password != '':
+			pass
+		else:
+			print('The user (-u) and the password (-p) options should be specified for proper loading (-l)')
+
 	pred = predict(input_list)
 	results = []
 	for predict, input_string in zip(pred, input_list):
-		result = list(zip(predict, input_string.split()))
-		results.append(result)
-	if l_flag:
-		if u_flag and p_flag:
-			publications = [ compose_publication(result) for result in results ]
-			db = DBWrapper(user, password)
-			db.add(publications)
+		if validate(predict):
+			result = list(zip(predict, input_string.split()))
+			results.append(result)
 		else:
-			print('The user (-u) and the password (-p) options should be specified for proper loading (-l)')
+			print('Invalid string:')
+			print(input_string)
+	if load_process:
+		publications = [ compose_publication(result) for result in results ]
+		db = DBWrapper(user, password)
+		db.add(publications)
 	else:
 		for result in results:
 			print(group_publication(result))
