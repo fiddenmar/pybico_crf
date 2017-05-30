@@ -12,6 +12,7 @@ from author import Author
 from misc import Misc
 from dbwrapper import DBWrapper
 
+from saver import Saver
 from doc2text import doc2text
 from features import word2features, sent2features, sent2labels, sent2tokens
 
@@ -56,11 +57,14 @@ if __name__ == '__main__':
 	user = ''
 	password = ''
 	input_list = []
-	input_mode = 'input'
+	input_mode = ''
+	input_process = False
 	load_process = False
-	usage_string = 'usage: python3 pybico_crf.py  [-h][-i <input_mode> -s <input_source>][-l -u <user_name> -p <user_password>]'
+	export_process = False
+	export_file_name = ''
+	usage_string = 'usage: python3 pybico_crf.py  [-h][-i <input_mode> -s <input_source>][[-l]|[-x <export_name>] -u <user_name> -p <user_password>]'
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], 'hi:u:p:ls:')
+		opts, args = getopt.getopt(sys.argv[1:], 'hi:u:p:ls:x:')
 	except getopt.GetoptError:
 		print(usage_string)
 		sys.exit(2)
@@ -71,6 +75,7 @@ if __name__ == '__main__':
 			sys.exit()
 		elif opt == '-i':
 			input_mode = arg
+			input_process = True
 		elif opt == '-u':
 			user = arg
 		elif opt == '-p':
@@ -79,33 +84,37 @@ if __name__ == '__main__':
 			load_process = True
 		elif opt == '-s':
 			input_string = arg
+		elif opt == '-x':
+			export_process = True
+			export_file_name = arg
 		else:
 			print(usage_string)
 			sys.exit(2)
 
-	if input_mode == 'input':
-		print('Enter the bibliography string:')
-		input_string = input()
-		input_list = [input_string]
-	elif input_mode == 'text':
-		if s_flag:
-			f = open(input_string)
-			content = f.read()
-			lines = content.split('\n')
-			input_list = [line.strip() for line in lines]
+	if input_process:
+		if input_mode == 'input':
+			print('Enter the bibliography string:')
+			input_string = input()
+			input_list = [input_string]
+		elif input_mode == 'text':
+			if s_flag:
+				f = open(input_string)
+				content = f.read()
+				lines = content.split('\n')
+				input_list = [line.strip() for line in lines]
+			else:
+				print('The source (-s) option should be specified for proper input (-i)')
+				print(usage_string)
+				sys.exit(2)
+		elif input_mode == 'string':
+			input_list = [input_string]
+		elif input_mode == 'doc':
+			input_list = doc2text(input_string).split('\n')
+			input_list = [ inp.lstrip('0123456789.- ') for inp in input_list ]
 		else:
-			print('The source (-s) option should be specified for proper input (-i)')
+			print('Possible input (-i) option values: input, text, string, doc')
 			print(usage_string)
 			sys.exit(2)
-	elif input_mode == 'string':
-		input_list = [input_string]
-	elif input_mode == 'doc':
-		input_list = doc2text(input_string).split('\n')
-		input_list = [ inp.lstrip('0123456789.- ') for inp in input_list ]
-	else:
-		print('Possible input (-i) option values: input, text, string, doc')
-		print(usage_string)
-		sys.exit(2)
 
 	if load_process:
 		if user != '' and password != '':
@@ -122,10 +131,15 @@ if __name__ == '__main__':
 		else:
 			print('Invalid string:')
 			print(input_string)
-	if load_process:
-		publications = [ compose_publication(result) for result in results ]
+	if load_process or export_process:
 		db = DBWrapper(user, password)
-		db.add(publications)
+		if load_process:
+			publications = [ compose_publication(result) for result in results ]
+			db.add(publications)
+		if export_process:
+			data = db.get()
+			exporter = Saver()
+			exporter.save(data, "xlsx", export_file_name)
 	else:
 		for result in results:
 			print(group_publication(result))
