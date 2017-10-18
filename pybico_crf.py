@@ -1,6 +1,6 @@
 from sklearn.externals import joblib
 import sklearn_crfsuite
-import re
+import regex as re
 import sys, getopt
 import argparse
 import itertools
@@ -13,7 +13,7 @@ from misc import Misc
 from dbwrapper import DBWrapper
 
 from saver import Saver
-from doc2text import doc2text
+# from doc2text import doc2text
 from features import word2features, sent2features, sent2labels, sent2tokens
 
 crf = joblib.load('model.pkl')
@@ -41,7 +41,7 @@ def validate(predict):
 	return False
 
 def predict_one(sentence):
-	target = [sent2features(s) for s in [sentence.split()]]
+	target = [ sent2features(s) for s in [sentence.split()] ]
 	return crf.predict(target)
 
 def predict(sentence_array):
@@ -97,11 +97,14 @@ if __name__ == '__main__':
 			input_string = input()
 			input_list = [input_string]
 		elif input_mode == 'text':
-			if s_flag:
+			if input_string:
 				f = open(input_string)
 				content = f.read()
 				lines = content.split('\n')
-				input_list = [line.strip() for line in lines]
+				# lines = [ re.sub( r"(?P<high>\p{Lu})(?P<low>((\p{Lu}*) ?)*)(?P<same> (\p{Lu}\p{Ll}*) \p{Lu}\. ?\p{Lu}\.)?", lambda m: m.group("high").capitalize()+m.group("low").lower()+m.group("same"), line) for line in lines ]
+				# lines = [ re.sub(r"([\p{L}])//([\p{L}])", lambda m: m.group(1)+" // "+m.group(2), line) for line in lines ]
+				# print(lines)
+				input_list = [ line.strip() for line in lines ]
 			else:
 				print('The source (-s) option should be specified for proper input (-i)')
 				print(usage_string)
@@ -125,21 +128,24 @@ if __name__ == '__main__':
 	pred = predict(input_list)
 	results = []
 	for predict, input_string in zip(pred, input_list):
-		if validate(predict):
+		# if validate(predict):
 			result = list(zip(predict, input_string.split()))
 			results.append(result)
-		else:
-			print('Invalid string:')
-			print(input_string)
-	if load_process or export_process:
-		db = DBWrapper(user, password)
-		if load_process:
-			publications = [ compose_publication(result) for result in results ]
-			db.add(publications)
-		if export_process:
-			data = db.get()
-			exporter = Saver()
-			exporter.save(data, "xlsx", export_file_name)
-	else:
-		for result in results:
-			print(group_publication(result))
+		# else:
+			# print('Invalid string:')
+			# print(input_string)
+	# if load_process or export_process:
+	# 	db = DBWrapper(user, password)
+	# 	if load_process:
+	# 		publications = [ compose_publication(result) for result in results ]
+	# 		db.add(publications)
+	# 	if export_process:
+	# 		data = db.get()
+	# 		exporter = Saver()
+	# 		exporter.save(data, "xlsx", export_file_name)
+	# else:
+	# for result in results:
+	# 	print(group_publication(result))
+	data = [ compose_publication(result) for result in results ]
+	exporter = Saver()
+	exporter.save(data, "xlsx", export_file_name)

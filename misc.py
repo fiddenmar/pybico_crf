@@ -7,7 +7,7 @@ class Misc:
 		self.volume = volume if volume else ""
 		self.pages = pages if pages else ""
 
-	def to_string(self):
+	def __str__(self):
 		str = ""
 		fields = [self.location, self.publisher, self.year, self.volume, self.pages]
 		for field in fields:

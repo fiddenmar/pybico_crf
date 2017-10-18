@@ -2,7 +2,7 @@ from itertools import chain
 import sklearn
 import random
 import scipy.stats
-from sklearn.metrics import make_scorer
+from sklearn.metrics import make_scorer, confusion_matrix
 from sklearn.cross_validation import cross_val_score
 from sklearn.grid_search import RandomizedSearchCV
 import sklearn_crfsuite
@@ -12,6 +12,17 @@ from sklearn.externals import joblib
 import re
 
 from features import word2features, sent2features, sent2labels, sent2tokens
+
+def cluster(data_global):
+	groups = []
+	for data in data_global:
+		groups.append([data[0]])
+		for x in data[1:]:
+			if abs(x == groups[-1][-1]):
+				groups[-1].append(x)
+			else:
+				groups.append([x])
+	return groups
 
 if __name__ == "__main__":
 	file_with_tokens = open("tokens")
@@ -48,3 +59,26 @@ if __name__ == "__main__":
 	print(metrics.flat_classification_report(
 		y_test, y_pred, labels=sorted_labels, digits=3
 	))
+	y_cl_test = y_test[:50]
+	# print(y_cl_test)
+	# print(cluster(y_cl_test))
+	ds = ["T_DELIMITER", "T_AUTHOR", "T_TITLE", "T_JOURNAL", "T_LOCATION", "T_PUBLISHER", "T_YEAR", "T_VOLUME", "T_PAGES", "T_TJSEP"]
+	tag_dict_test = {"T_DELIMITER": [], "T_AUTHOR": [], "T_TITLE": [], "T_JOURNAL": [], "T_LOCATION": [], "T_PUBLISHER": [], "T_YEAR": [], "T_VOLUME": [], "T_PAGES": [], "T_TJSEP": []}
+	tag_dict_pred = {"T_DELIMITER": [], "T_AUTHOR": [], "T_TITLE": [], "T_JOURNAL": [], "T_LOCATION": [], "T_PUBLISHER": [], "T_YEAR": [], "T_VOLUME": [], "T_PAGES": [], "T_TJSEP": []}
+	for d in ds:
+		for seq in cluster(y_test):
+			if seq[0] == d:
+				tag_dict_test[d].append(seq)
+		for seq in cluster(y_pred):
+			if seq[0] == d:
+				tag_dict_pred[d].append(seq)
+
+	check_sum = 0;
+	for d in ds:
+		check = metrics.sequence_accuracy_score(
+			tag_dict_test[d], tag_dict_pred[d]
+		)
+		check_sum += check
+		print(d, "\t", check)
+
+	print("Average: ", check_sum / len(ds))
